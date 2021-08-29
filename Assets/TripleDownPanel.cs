@@ -45,13 +45,11 @@ public class TripleDownPanel : MonoBehaviour
     void Start()
     {
         Instance = this;
-        m_columnCount = 7;
-        m_rawCount = 6;
-        //itemVals = new int[m_rawCount, m_columnCount];
+
         slots = new Slot[m_columnCount, m_rawCount];
         itemList = new List<Item>(m_columnCount * m_rawCount);
         m_layOut.constraintCount = m_columnCount;
-        //InitItemsValue();
+
         this.StartCoroutine(InitSlots());
 
         m_replay.onClick.AddListener(()=>
@@ -267,12 +265,6 @@ public class TripleDownPanel : MonoBehaviour
 
                     counter++;
 
-                    if(counter > 20)
-                    {
-                        Debug.LogError(counter);
-                        break;
-                    }
-
                     if(counter == 3)
                     {
                         sameList = new List<Item>();
@@ -305,12 +297,6 @@ public class TripleDownPanel : MonoBehaviour
                         break;
                     }
                     counter++;
-
-                    if(counter > 20)
-                    {
-                        Debug.LogError(counter);
-                        break;
-                    }
 
                     if(counter == 3)
                     {

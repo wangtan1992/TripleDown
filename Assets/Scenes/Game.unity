@@ -942,8 +942,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 764ad5147461a4725b8ab0e49a31c534, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_rawCount: 5
-  m_columnCount: 6
+  m_rawCount: 6
+  m_columnCount: 7
   m_itemTypeRange: 5
   m_replay: {fileID: 1833351151}
   m_baseSlot: {fileID: 801559176}
