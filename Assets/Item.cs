@@ -10,10 +10,12 @@ public class Item : MonoBehaviour,IBeginDragHandler, IDragHandler, IEndDragHandl
     [SerializeField]
     private Image m_icon;
 
-
     public int typeVal { get; private set;}
 
+    //当前属于哪个槽位
     public Slot slot { get; private set; }
+
+    public Slot targetSlot { get; private set; }
 
     public void SetUp(int itemType, Slot t)
     {
@@ -26,12 +28,25 @@ public class Item : MonoBehaviour,IBeginDragHandler, IDragHandler, IEndDragHandl
     }
 
 
-    public void Move2Target(Slot t, TweenCallback action)
+    public void Move2Slot(Slot t, TweenCallback action)
     {
         var tweener = DOTween.To(()=> transform.position, 
         x => transform.position = x, t.transform.position, .5f);
 
         tweener.onComplete += action;
+    }
+
+    public void Move2Target()
+    {
+        var tweener = DOTween.To(()=> transform.position, 
+        x => transform.position = x, targetSlot.transform.position, .5f);
+
+        tweener.onComplete += ()=> 
+        {
+            slot = targetSlot;
+            targetSlot.SetItem(this);
+            targetSlot = null;
+        };        
     }
 
     public void ChangeSlot(Slot newTarget)
@@ -40,14 +55,52 @@ public class Item : MonoBehaviour,IBeginDragHandler, IDragHandler, IEndDragHandl
         slot.SetItem(this);
     }
 
-    public void SwapPos(Item other)
+    public void SetTarget(Slot t)
+    {
+        if(this.slot.isLinked)
+        {
+            transform.position = new Vector3
+            (
+                t.transform.position.x, 
+                t.transform.position.y + 1000,
+                transform.position.z
+            );            
+        }
+
+        this.targetSlot = t;
+    }
+
+    public void SetUpValue(int val)
+    {
+        this.typeVal = val;
+        this.m_icon.sprite = UnityEditor.AssetDatabase
+            .LoadAssetAtPath<Sprite>(
+                string.Format("Assets/UnLoadResources/Textures/A_{0:D2}.png", 
+                typeVal));
+    }
+
+    public IEnumerator SwapPos(Item other)
     {
         if(other == null)
         {
-            return;
+            yield break;
         }
-        Move2Target(other.slot, ()=>{ ChangeSlot(other.slot); });
-        other.Move2Target(slot, ()=>{ ChangeSlot(slot); });
+        var mySlot = slot;
+
+        bool swapFinish1 = false;
+        bool swapFinish2 = false;
+        Move2Slot(other.slot, ()=>{ 
+            ChangeSlot(other.slot);
+            swapFinish1 = true;
+        });
+        other.Move2Slot(slot, ()=>{ 
+            other.ChangeSlot(mySlot);
+            swapFinish2 = true;
+        });
+
+        yield return new WaitUntil(()=> swapFinish1 && swapFinish2);
+
+        yield return TripleDownPanel.Instance.UpdateBorad();
     }
 
 
@@ -79,11 +132,11 @@ public class Item : MonoBehaviour,IBeginDragHandler, IDragHandler, IEndDragHandl
 
                 if(moveX < 0)
                 {
-                    toSwap = TripleDownPanel.Instance.GetLeft(this);
+                    toSwap = TripleDownPanel.Instance.GetLeft(slot);
                 }
                 else
                 {
-                    toSwap = TripleDownPanel.Instance.GetRight(this);
+                    toSwap = TripleDownPanel.Instance.GetRight(slot);
                 }
             }
             else
@@ -91,26 +144,26 @@ public class Item : MonoBehaviour,IBeginDragHandler, IDragHandler, IEndDragHandl
 
                 if(moveY < 0)
                 {
-                    toSwap = TripleDownPanel.Instance.GetLower(this);
+                    toSwap = TripleDownPanel.Instance.GetLower(slot);
                 }
                 else
                 {
-                    toSwap = TripleDownPanel.Instance.GetUpper(this);
+                    toSwap = TripleDownPanel.Instance.GetUpper(slot);
                 }
             }
 
             if(toSwap)
             {
-                SwapPos(toSwap);
+                this.StartCoroutine(SwapPos(toSwap));
             }
             else
             {
-                Move2Target(slot, ()=>{ transform.SetSiblingIndex(10);});
+                Move2Slot(slot, ()=>{ transform.SetSiblingIndex(10);});
             }
         }
         else
         {
-            Move2Target(slot, ()=>{ transform.SetSiblingIndex(10);});
+            Move2Slot(slot, ()=>{ transform.SetSiblingIndex(10);});
         }
     }
 }
